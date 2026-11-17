@@ -2,7 +2,7 @@ name: CI
 
 on:
 
-  push:
+  push:git add -A, git commit -m "Move to PostgreSQL, git push
   pull_request:
 
 jobs:
