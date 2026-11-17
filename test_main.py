@@ -5,10 +5,11 @@ import main
 
 
 @pytest.fixture()
-def client(tmp_path, monkeypatch):
-    # Point the app at a throwaway database for each test
-    monkeypatch.setattr(main, "DB_FILE", str(tmp_path / "test.db"))
+def client():
+    # Real Postgres (see docker-compose.yml); start each test with an empty table
     main.init_db()
+    with main.get_conn() as conn:
+        conn.execute("TRUNCATE messages")
     return TestClient(main.app)
 
 
@@ -23,11 +24,13 @@ def test_list_starts_empty(client):
     assert r.status_code == 200
     assert r.json() == []
 
+
 def test_health(client):
     assert client.get("/health").json() == {"status": "ok"}
 
+
 def test_create_and_list(client):
-    created = create(client, message="SQLite test")
+    created = create(client, message="Postgres test")
     r = client.get("/messages")
     assert r.json() == [created]
 
@@ -59,8 +62,8 @@ def test_delete_only_removes_target(client):
     assert client.get("/messages").json() == [b]
 
 
-def test_no_lock_after_many_requests(client):
-    # Regression test for "database is locked": connections must close
+def test_no_connection_leak_after_many_requests(client):
+    # Regression test: every request must close its connection
     ids = [create(client, message=str(i))["id"] for i in range(25)]
     for _ in range(5):
         client.get("/messages")
@@ -73,8 +76,9 @@ def test_create_rejects_bad_body(client):
     r = client.post("/messages", json={"name": "only name"})
     assert r.status_code == 422
 
+
 def test_get_existing_message(client):
-    created = client.post("/messages", json={"name": "jase", "message": "hi"}).json()
+    created = create(client, name="jase", message="hi")
     r = client.get(f"/messages/{created['id']}")
     assert r.status_code == 200
     assert r.json() == {"id": created["id"], "name": "jase", "message": "hi"}
