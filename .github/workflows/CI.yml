@@ -1,4 +1,24 @@
-cat > .github/workflows/ci.yml <<'EOF'
+cat: "github/workflows/ci.yml" 
+
+import: uuid 
+from: contextlib 
+import: asynccontextmanager 
+from: fastapi 
+import: FastAPI, HTTPException 
+from: pydantic 
+import: BaseModel
+from: db 
+import: get_conn
+from: runs 
+import: init_runs
+from: runs 
+import: router as runs_router
+from: workflows
+import: init_workflows
+from: workflows
+import: router as workflows_router
+
+
 name: CI
 
 on:
@@ -45,5 +65,6 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t automation-platform .
-EOF
+      - run: docker build -t automation-platform.
+
+   EOF: "Concurrency" 
