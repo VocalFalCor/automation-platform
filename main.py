@@ -1,25 +1,17 @@
-import os
 import uuid
 from contextlib import asynccontextmanager
 
-import psycopg
 from fastapi import FastAPI, HTTPException
-from psycopg.rows import dict_row
 from pydantic import BaseModel
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/messages"
-)
+from db import get_conn
+from workflows import init_workflows
+from workflows import router as workflows_router
 
 
 class MessageIn(BaseModel):
     name: str
     message: str
-
-
-def get_conn():
-    # Used as `with get_conn() as conn:` -> commits on success, always closes
-    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 
 def init_db():
@@ -28,6 +20,7 @@ def init_db():
             "CREATE TABLE IF NOT EXISTS messages ("
             "id TEXT PRIMARY KEY, name TEXT NOT NULL, message TEXT NOT NULL)"
         )
+    init_workflows()
 
 
 @asynccontextmanager
@@ -37,6 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(workflows_router)
 
 
 @app.post("/messages")

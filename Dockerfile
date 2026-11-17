@@ -9,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py .
+COPY main.py db.py workflows.py .
 
 # Run as a non-root user; /data holds the SQLite file (mount a volume here)
 RUN useradd --create-home appuser && mkdir /data && chown appuser /data
