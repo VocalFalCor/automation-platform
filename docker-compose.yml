@@ -25,5 +25,18 @@ services:
       db:
         condition: service_healthy
 
+  worker:
+    build: .
+    command: ["python", "engine.py"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/messages
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+
 volumes:
   pgdata:

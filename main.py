@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from db import get_conn
+from runs import init_runs
+from runs import router as runs_router
 from workflows import init_workflows
 from workflows import router as workflows_router
 
@@ -21,6 +23,7 @@ def init_db():
             "id TEXT PRIMARY KEY, name TEXT NOT NULL, message TEXT NOT NULL)"
         )
     init_workflows()
+    init_runs()
 
 
 @asynccontextmanager
@@ -31,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(workflows_router)
+app.include_router(runs_router)
 
 
 @app.post("/messages")
